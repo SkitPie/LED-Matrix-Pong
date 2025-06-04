@@ -1,13 +1,17 @@
+"""Small helper script printing raw gamepad events."""
+
 from inputs import devices
 import threading
 
 def handle_gamepad(gamepad, id):
+    """Continuously read events from a gamepad and print them."""
     while True:
         events = gamepad.read()
         for event in events:
             print(f"Gamepad {id}:", event.ev_type, event.code, event.state)
 
 def main():
+    """Start threads for two connected gamepads."""
 
     gamepad1 = devices.gamepads[0]
     gamepad2 = devices.gamepads[1]

@@ -1,3 +1,5 @@
+"""Helper functions to control a chain of MAX7219 LED matrices via SPI."""
+
 import spidev
 import time
 # SPI-Initialisierung
