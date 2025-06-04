@@ -1,9 +1,13 @@
+"""Two-player Pong controller with simple game-over handling."""
+
 import threading
 import time
 from inputs import devices
 from gameEngine import GameEngine, GameObject
 
 def main():
+    """Start a Pong game for two gamepads and reset when a wall is hit."""
+
     engine = GameEngine()
     ball = GameObject(15, 3, 1, 1, vx=0.5, vy=0.3)
   
@@ -14,6 +18,8 @@ def main():
     paddle_right.is_static = True
 
     def gameover(obj):
+        """Simple callback executed when the ball hits a death zone."""
+
         print("Game Over")
         if obj:
             ball.setPos(15, 3)
@@ -42,6 +48,8 @@ def main():
     gamepad2 = devices.gamepads[1]  # Steuerung für paddle_right
 
     def gamepad_input_left():
+        """Handle input for the left player's paddle."""
+
         print("Gamepad 1 Thread gestartet")
         while engine.running:
             events = gamepad1.read()
@@ -54,6 +62,8 @@ def main():
                         paddle_left.y += 1
 
     def gamepad_input_right():
+        """Handle input for the right player's paddle."""
+
         print("Gamepad 2 Thread gestartet")
         while engine.running:
             events = gamepad2.read()
@@ -65,6 +75,7 @@ def main():
                     if event.state == 1 and paddle_right.y < engine.height - paddle_right.height:
                         paddle_right.y += 1
 
+    # Separate threads for each player's input
     thread_left = threading.Thread(target=gamepad_input_left, daemon=True)
     thread_right = threading.Thread(target=gamepad_input_right, daemon=True)
 

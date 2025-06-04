@@ -1,15 +1,16 @@
-import spidev 
-import time   # SPI-Initialisierung spi = spidev.SpiDev() spi.open(0, 0) spi.max_speed_hz = 1000000   NUM_MATRICES = 4   # Register-Adressen REG_NOOP = 0x00 REG_DECODE_MODE…
+"""Minimal 2D game engine for the LED matrix display."""
 
+import spidev  # Imported for completeness; initialized in :mod:`led_display`
 import time
-
 import threading
 
-from led_display import set_pixel, clear_display, init_display, update_display  # Deine LED-Matrix Funktionen
+from led_display import set_pixel, clear_display, init_display, update_display
 
 class GameObject:
+    """A simple rectangular entity managed by :class:`GameEngine`."""
 
     def __init__(self, x, y, width, height, vx=0, vy=0, trigger=None):
+        """Initialize the object with position, size and velocity."""
 
         self.x = x
 
@@ -30,61 +31,58 @@ class GameObject:
         self.trigger = trigger
 
     def move(self, dx, dy):
+        """Translate the object by ``dx`` and ``dy`` if not static."""
 
         if not self.is_static:
-
             self.x += dx
-
             self.y += dy
 
     def setPos(self, posx, posy):
+        """Place the object at ``(posx, posy)``."""
         self.x = posx
         self.y = posy
 
     def set_velocity(self, vx, vy):
+        """Assign a new velocity if the object is movable."""
 
         if not self.is_static:
-
             self.vx = vx
-
             self.vy = vy
 
     def update(self):
+        """Advance the object's position by its velocity."""
 
         if not self.is_static:
-
             self.x += self.vx
-
             self.y += self.vy
 
     def get_rect(self):
-
+        """Return the bounding rectangle of the object."""
         return (self.x, self.y, self.width, self.height)
 
     def collides_with(self, other):
+        """Determine whether this object intersects ``other``."""
 
-        return (self.x < other.x + other.width and
-
-                self.x + self.width > other.x and
-
-                self.y < other.y + other.height and
-
-                self.y + self.height > other.y)
+        return (
+            self.x < other.x + other.width
+            and self.x + self.width > other.x
+            and self.y < other.y + other.height
+            and self.y + self.height > other.y
+        )
 
 class GameEngine:
+    """Engine managing game objects and rendering on the LED matrix."""
 
     def __init__(self, width=32, height=8):
+        """Create a new engine with the given display size."""
 
         self.width = width
-
         self.height = height
 
         self.objects = []
-
         self.running = False
 
         self.game_thread = None
-
         self.render_thread = None
 
         self.objects_lock = threading.Lock()
@@ -92,20 +90,20 @@ class GameEngine:
         init_display()  # LED-Matrix initialisieren
 
     def add_object(self, obj):
+        """Register a :class:`GameObject` with the engine."""
 
         with self.objects_lock:
-
             self.objects.append(obj)
 
     def remove_object(self, obj):
+        """Remove an object from the engine if present."""
 
         with self.objects_lock:
-
             if obj in self.objects:
-
                 self.objects.remove(obj)
 
     def handle_collisions(self):
+        """Handle wall and object collisions for all objects."""
 
         with self.objects_lock:
 
@@ -158,6 +156,7 @@ class GameEngine:
                         
 
     def handle_object_collision(self, obj1, obj2):
+        """Resolve a collision between two objects."""
 
         # Statisches vs Bewegliches Objekt
 
@@ -194,12 +193,14 @@ class GameEngine:
             obj1.vy, obj2.vy = obj2.vy, obj1.vy
 
     def handle_trigger(self, obj1, obj2):
+        """Invoke trigger callbacks when trigger objects are hit."""
         if obj1.is_trigger and obj1.trigger is not None:
             obj1.trigger(obj1)
         if obj2.is_trigger and obj2.trigger is not None:
             obj2.trigger(obj2)
 
     def update_game(self):
+        """Update all objects and resolve collisions."""
 
         with self.objects_lock:
 
@@ -210,6 +211,7 @@ class GameEngine:
         self.handle_collisions()
 
     def render_frame(self):
+        """Draw the current scene to the LED matrix."""
 
         clear_display()  # Display löschen
 
@@ -230,6 +232,7 @@ class GameEngine:
         update_display()  # Änderungen auf Matrix anzeigen
 
     def game_loop(self):
+        """Continuously update game logic at ~30 FPS."""
 
         while self.running:
 
@@ -242,6 +245,7 @@ class GameEngine:
             time.sleep(max(0, 0.033 - elapsed))  # 30 FPS
 
     def render_loop(self):
+        """Continuously render frames at ~30 FPS."""
 
         while self.running:
 
@@ -254,6 +258,7 @@ class GameEngine:
             time.sleep(max(0, 0.033 - elapsed))  # 30 FPS
 
     def start(self):
+        """Start the update and render threads."""
 
         self.running = True
 
@@ -266,6 +271,7 @@ class GameEngine:
         self.render_thread.start()
 
     def stop(self):
+        """Stop the engine and wait for threads to finish."""
 
         self.running = False
 
