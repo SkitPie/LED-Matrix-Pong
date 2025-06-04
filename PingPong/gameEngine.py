@@ -1,4 +1,3 @@
-
 import spidev 
 import time   # SPI-Initialisierung spi = spidev.SpiDev() spi.open(0, 0) spi.max_speed_hz = 1000000   NUM_MATRICES = 4   # Register-Adressen REG_NOOP = 0x00 REG_DECODE_MODE…
 
@@ -10,7 +9,7 @@ from led_display import set_pixel, clear_display, init_display, update_display  
 
 class GameObject:
 
-    def __init__(self, x, y, width, height, vx=0, vy=0):
+    def __init__(self, x, y, width, height, vx=0, vy=0, trigger=None):
 
         self.x = x
 
@@ -28,7 +27,7 @@ class GameObject:
 
         self.is_trigger = False
 
-        self.trigger = any
+        self.trigger = trigger
 
     def move(self, dx, dy):
 
@@ -37,6 +36,10 @@ class GameObject:
             self.x += dx
 
             self.y += dy
+
+    def setPos(self, posx, posy):
+        self.x = posx
+        self.y = posy
 
     def set_velocity(self, vx, vy):
 
@@ -151,8 +154,7 @@ class GameEngine:
                     if obj1.collides_with(obj2):
 
                         self.handle_object_collision(obj1, obj2)
-                        if (obj1.is_trigger == True or obj2.is_trigger == True):
-                            self.handle_trigger(obj1, obj2)
+                        self.handle_trigger(obj1, obj2)
                         
 
     def handle_object_collision(self, obj1, obj2):
@@ -192,8 +194,10 @@ class GameEngine:
             obj1.vy, obj2.vy = obj2.vy, obj1.vy
 
     def handle_trigger(self, obj1, obj2):
-        if(obj1.is_trigger == True):
-            obj1.trigger()
+        if obj1.is_trigger and obj1.trigger is not None:
+            obj1.trigger(obj1)
+        if obj2.is_trigger and obj2.trigger is not None:
+            obj2.trigger(obj2)
 
     def update_game(self):
 
